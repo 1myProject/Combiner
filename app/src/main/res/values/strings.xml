@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Combiner Ultra Pro Max…</string>
+    <string name="join">Объединить</string>
+    <string name="add">Добавить</string>
+    <string name="preview">превью</string>
+    <string name="file_in">Файл сохранен в:%s</string>
+</resources>
