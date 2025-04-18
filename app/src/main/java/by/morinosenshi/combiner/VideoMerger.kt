@@ -2,15 +2,52 @@ package by.morinosenshi.combiner
 
 import android.app.Activity
 import android.content.Context
+import android.media.MediaMetadataRetriever
 import android.util.Log
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
 import java.io.File
 import java.io.IOException
+import kotlin.math.roundToInt
 
 
 class VideoMerger private constructor(private val context: Context, private val callback: FFMpegCallback) {
 
+    private class Vid(file: File) {
+        val width: Float
+        val height: Float
+        val ratio: Float
+            inline get() = width / height
+
+        init {
+            val retriever = MediaMetadataRetriever()
+            retriever.setDataSource(file.absolutePath)
+            width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)!!.toFloat()
+            height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)!!.toFloat()
+            retriever.release()
+        }
+
+        override fun toString(): String {
+            val w = MAX_WIDTH.roundToInt()
+            val h = MAX_HEIGHT.roundToInt()
+
+            val str = StringBuilder("scale=$w:$h:force_original_aspect_ratio=decrease")
+            if (MAX_RATIO != ratio) {
+                str.append(",pad=$w:$h:(ow-iw)/2:(oh-ih)/2:color=black")
+            }
+
+            return str.toString()
+        }
+
+        companion object {
+            var MAX_HEIGHT = 0f
+            var MAX_WIDTH = 0f
+            var MAX_RATIO = 0f
+        }
+
+    }
+
+    private val sizes = mutableListOf<Vid>()
     private var videos: List<File>? = null
     private var outputPath: File? = null
 
@@ -27,20 +64,42 @@ class VideoMerger private constructor(private val context: Context, private val 
     fun mergeConcat() {
         if (!checkStar()) return
 
-        val concat = StringBuilder()
+        val inputFile = StringBuilder()
         for (v in videos!!) {
-            concat.append("file '${v.absolutePath}'\n")
+            inputFile.append("-i '${v.absolutePath}' ")
+            val sz = Vid(v)
+
+            if (sz.height > Vid.MAX_HEIGHT) {
+                Vid.MAX_HEIGHT = sz.height
+            }
+            if (sz.ratio > Vid.MAX_RATIO) {
+                Vid.MAX_RATIO = sz.ratio
+                Vid.MAX_WIDTH = Vid.MAX_RATIO * Vid.MAX_HEIGHT
+            }
+
+            Log.i("RATIO", "${sz.width}/${sz.height}=${sz.ratio}")
+
+            sizes.add(sz)
         }
 
-        val fls = File(context.cacheDir, "files").apply {
-            writeText(concat.toString())
+        val filterComplex = StringBuilder("-filter_complex \"")
+        for (sz in sizes.withIndex()) {
+            val i = sz.index
+            filterComplex.append("[$i:v]${sz.value}[v$i];")
         }
+        for (i in sizes.indices) {
+            filterComplex.append("[v$i][$i:a]")
+        }
+        filterComplex.append("concat=n=${sizes.size}:v=1:a=1[v][a]\" ")
 
         val command = StringBuilder().apply {
-            append("-f concat ")
-            append("-safe 0 ")
-            append("-i \"${fls.absolutePath}\" ")
-            append("-c copy -y ")
+            append(inputFile)
+            append(filterComplex)
+            append("-map \"[v]\" -map \"[a]\" -y ")
+//            append("-c:v libx264 ")
+            append("-crf 23 ")
+            append("-preset medium ")
+            append("-stats -loglevel error ")
             append("\"${outputPath!!.absolutePath}\"")
         }
 

@@ -41,7 +41,7 @@ class ItemFragment : Fragment() {
         val root = FragmentItemListBinding.bind(
             inflater.inflate(R.layout.fragment_item_list, container, false)
         )
-        val merger = VideoMerger.Companion.with(requireActivity())
+        val merger = VideoMerger.with(requireActivity())
 
         with(root.list) {
             layoutManager = LinearLayoutManager(context)
@@ -54,12 +54,19 @@ class ItemFragment : Fragment() {
         }
 
         root.run.setOnClickListener {
+            merger.setVideoFiles(MyData.List_FILES).setOutputPath(getOutputFile())
             CoroutineScope(Dispatchers.IO).launch {
                 merger.setVideoFiles(MyData.List_FILES).setOutputPath(getOutputFile()).mergeConcat()
 //                viewAdapter?.notifyDataSetChanged()
                 viewAdapter?.notifyItemRangeRemoved(0, MyData.LIST.size)
                 MyData.LIST.clear()
             }
+        }
+                merger.mergeConcat()
+            }
+//          viewAdapter?.notifyDataSetChanged()
+            viewAdapter?.notifyItemRangeRemoved(0, MyData.LIST.size)
+            MyData.LIST.clear()
         }
 
         return root.root
@@ -84,7 +91,7 @@ class ItemFragment : Fragment() {
         if (file.isFile) file.delete()
         if (!file.exists()) file.mkdirs()
 
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ss")
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss")
         val current = LocalDateTime.now().format(formatter)
 
 //        val fileName = "${System.currentTimeMillis()}.mp4"

@@ -3,5 +3,5 @@
     <string name="join">Объединить</string>
     <string name="add">Добавить</string>
     <string name="preview">превью</string>
-    <string name="file_in">Файл сохранен в:%s</string>
+    <string name="file_in">Файл сохранен в:\n%s</string>
 </resources>

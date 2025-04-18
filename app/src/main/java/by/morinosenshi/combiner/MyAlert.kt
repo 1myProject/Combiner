@@ -44,22 +44,21 @@ class MyAlert(context: Context, private val runUI: (Runnable) -> Unit) : FFMpegC
 
     var s = ""
     override fun onProgress(progress: String) = runUI {
-//        process.progress = num.toInt()
         if (isEnd) return@runUI
-        s += progress
-        if ('\n' in progress) {
-            Log.i("FFMPEG_LOG", s)
-            s = s.substringAfter('\n')
-        }
 
-        log.append(progress)
+        Log.i("FFMPEG_LOG", progress)
 
-        if (log.count { c -> c == '\n' } > MAX_LINES) {
-            val inx = log.indexOf('\n') + 1
-            log.delete(0, inx)
-        }
+//        log.append(progress)
+//
+//        val count = log.count { c -> c == '\r' }
+//        if (count > MAX_LINES) {
+//            val inx = log.indexOf('\r') + 1
+//            log.delete(0, inx)
+//        }
+//
+//        text.text = log.toString()
 
-        text.text = log.toString()
+        text.text = parseProgress(progress)
     }
 
     override fun onSuccess(convertedFile: File) = runUI {
@@ -82,11 +81,14 @@ class MyAlert(context: Context, private val runUI: (Runnable) -> Unit) : FFMpegC
         dialog?.setTitle("Error FFmpeg")
     }
 
-    override fun onFinish() = runUI {
-//        text.text = "Finish"
-    }
+    private fun parseProgress(row: String): String{
+        val frame = Regex("frame=\\s*\\d+").find(row)?.value
+        val fps = Regex("fps=\\s*\\d+").find(row)?.value
+        val size = Regex("size=\\s*\\d+\\w\\w").find(row)?.value
+        val time = Regex("time=\\s*[\\d:.]+").find(row)?.value
+        val bitrate = Regex("bitrate=\\s*[^\\S]+").find(row)?.value
+        val speed = Regex("speed=\\s*\\d+.\\d+x").find(row)?.value
 
-    companion object {
-        private const val MAX_LINES = 20
+        return "$frame\n$fps\n$size\n$time\n$bitrate\n$speed"
     }
 }
