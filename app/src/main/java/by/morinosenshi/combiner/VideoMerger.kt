@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.util.Log
+import by.morinosenshi.combiner.settings.MargerSettings
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
 import java.io.File
@@ -61,8 +62,12 @@ class VideoMerger private constructor(private val context: Context, private val 
         return this
     }
 
-    fun mergeConcat() {
+    fun mergeConcat(settings: MargerSettings) {
         if (!checkStar()) return
+
+        if (settings.blur) {
+
+        }
 
         val inputFile = StringBuilder()
         for (v in videos!!) {
@@ -96,9 +101,9 @@ class VideoMerger private constructor(private val context: Context, private val 
             append(inputFile)
             append(filterComplex)
             append("-map \"[v]\" -map \"[a]\" -y ")
-//            append("-c:v libx264 ")
-            append("-crf 23 ")
-            append("-preset medium ")
+            append("-c:v libx264 ")
+            append("-crf ${settings.crf} ")
+            append("-preset ${settings.preset} ")
             append("-stats -loglevel error ")
             append("\"${outputPath!!.absolutePath}\"")
         }
@@ -159,5 +164,6 @@ class VideoMerger private constructor(private val context: Context, private val 
             val d = MyAlert(context, rUI)
             return VideoMerger(context, d)
         }
+
     }
 }

@@ -12,6 +12,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.morinosenshi.combiner.databinding.FragmentItemListBinding
+import by.morinosenshi.combiner.settings.MargerSettings
+import by.morinosenshi.combiner.settings.MargerSettingsAlert
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,7 +43,6 @@ class ItemFragment : Fragment() {
         val root = FragmentItemListBinding.bind(
             inflater.inflate(R.layout.fragment_item_list, container, false)
         )
-        val merger = VideoMerger.with(requireActivity())
 
         with(root.list) {
             layoutManager = LinearLayoutManager(context)
@@ -54,22 +55,19 @@ class ItemFragment : Fragment() {
         }
 
         root.run.setOnClickListener {
-            merger.setVideoFiles(MyData.List_FILES).setOutputPath(getOutputFile())
-            CoroutineScope(Dispatchers.IO).launch {
-                merger.setVideoFiles(MyData.List_FILES).setOutputPath(getOutputFile()).mergeConcat()
-//                viewAdapter?.notifyDataSetChanged()
-                viewAdapter?.notifyItemRangeRemoved(0, MyData.LIST.size)
-                MyData.LIST.clear()
-            }
-        }
-                merger.mergeConcat()
-            }
-//          viewAdapter?.notifyDataSetChanged()
-            viewAdapter?.notifyItemRangeRemoved(0, MyData.LIST.size)
-            MyData.LIST.clear()
+            MargerSettingsAlert(requireActivity()).show(::startMerge)
         }
 
         return root.root
+    }
+
+    fun startMerge(settings: MargerSettings) {
+        val merger = VideoMerger.with(requireActivity()).setVideoFiles(MyData.List_FILES).setOutputPath(getOutputFile())
+        CoroutineScope(Dispatchers.IO).launch {
+            merger.mergeConcat(settings)
+        }
+        viewAdapter?.notifyItemRangeRemoved(0, MyData.LIST.size)
+        MyData.LIST.clear()
     }
 
     private fun openFilePicker() {

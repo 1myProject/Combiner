@@ -4,4 +4,11 @@
     <string name="add">Добавить</string>
     <string name="preview">превью</string>
     <string name="file_in">Файл сохранен в:\n%s</string>
+    <string name="crf_head">crf: %s\n[качестово*размер файла]</string>
+    <string name="preset_head">preset: %s\n[скорость обработки/качество]</string>
+    <string name="kachestvo">качество</string>
+    <string name="razmer">размер</string>
+    <string name="skorost">скорость</string>
+    <string name="blur">добавить блюр</string>
+    <string name="zapusk">Запуск</string>
 </resources>

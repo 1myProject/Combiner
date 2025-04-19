@@ -23,6 +23,8 @@ class MyAlert(context: Context, private val runUI: (Runnable) -> Unit) : FFMpegC
         liner.addView(text)
 
         dialog = alert.setTitle("клеим ...").setView(liner).create()
+
+        dismissAccess(false)
     }
 
 
@@ -44,6 +46,7 @@ class MyAlert(context: Context, private val runUI: (Runnable) -> Unit) : FFMpegC
         isEnd = true
 
         text.text = rec(R.string.file_in, convertedFile.path)
+        dismissAccess(true)
     }
 
     override fun onFailure(error: Exception) = runUI {
@@ -51,6 +54,7 @@ class MyAlert(context: Context, private val runUI: (Runnable) -> Unit) : FFMpegC
         text.text = error.toString()
 
         dialog?.setTitle("Error")
+        dismissAccess(true)
     }
 
     override fun onNotAvailable(error: Exception) = runUI {
@@ -58,15 +62,24 @@ class MyAlert(context: Context, private val runUI: (Runnable) -> Unit) : FFMpegC
         text.text = error.toString()
 
         dialog?.setTitle("Error FFmpeg")
+        dismissAccess(true)
     }
 
-    private fun parseProgress(row: String): String{
+    private fun dismissAccess(can_dismiss: Boolean){
+        // Запрещаем закрытие при касании вне диалога
+        dialog?.setCanceledOnTouchOutside(can_dismiss)
+
+        // Запрещаем закрытие при нажатии кнопки "Назад"
+        dialog?.setCancelable(can_dismiss)
+    }
+
+    private fun parseProgress(row: String): String {
         val frame = Regex("""frame=\s*\d+""").find(row)?.value
         val fps = Regex("""fps=\s*\S+""").find(row)?.value
         val size = Regex("""size=\s*\d+\w\w""").find(row)?.value
         val time = Regex("""time=\s*[\d:.]+""").find(row)?.value
         val bitrate = Regex("""bitrate=\s*\S+""").find(row)?.value
-        val speed = Regex("""speed=\s*\d+.\d+x""").find(row)?.value
+        val speed = Regex("""speed=\s*[\d.]+x""").find(row)?.value
 
         return "$frame\n$fps\n$size\n$time\n$bitrate\n$speed"
     }
