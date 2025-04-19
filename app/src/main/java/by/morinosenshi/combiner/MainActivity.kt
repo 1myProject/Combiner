@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
@@ -14,8 +15,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import by.morinosenshi.combiner.R
-
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity() {
@@ -28,7 +30,6 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-//        checkFfmpegBinary()
 
         val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
@@ -44,6 +45,17 @@ class MainActivity : AppCompatActivity() {
         checkFirstLaunchAndRequestPermission(this, requestPermissionLauncher)
 
         replaceFragment(ItemFragment())
+
+        chkVer()
+    }
+
+    fun chkVer() {
+        CoroutineScope(Dispatchers.IO).launch {
+            if (CheckVersion.checkNew()) runOnUiThread {
+                Log.i("STAT", "OK")
+                CheckVersion.showAlert(this@MainActivity)
+            }
+        }
     }
 
 
@@ -51,7 +63,6 @@ class MainActivity : AppCompatActivity() {
         val fragmentManager = supportFragmentManager
         val fragmentTransaction = fragmentManager.beginTransaction()
         fragmentTransaction.replace(R.id.main, fragment)
-//        fragmentTransaction.add()
         fragmentTransaction.commit()
     }
 
@@ -71,6 +82,4 @@ class MainActivity : AppCompatActivity() {
         val moviesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
         return moviesDir.exists() && moviesDir.canWrite()
     }
-
-
 }

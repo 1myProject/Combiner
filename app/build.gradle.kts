@@ -7,6 +7,10 @@ android {
     namespace = "by.morinosenshi.combiner"
     compileSdk = 35
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "by.morinosenshi.combiner"
         minSdk = 26
